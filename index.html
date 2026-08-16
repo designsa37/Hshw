@@ -1,0 +1,1060 @@
+html_code = '''<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pulse — Discord Bot Generation</title>
+<style>
+  :root {
+    --bg: #050508;
+    --surface: #0a0a10;
+    --surface-2: #11111a;
+    --border: #1e1e2e;
+    --accent: #a855f7;
+    --accent-2: #06b6d4;
+    --accent-glow: rgba(168,85,247,0.3);
+    --text: #e2e2f0;
+    --muted: #6b6b8a;
+    --success: #22c55e;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  /* Background pulse effect */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 50%; left: 50%;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    animation: breathe 6s ease-in-out infinite;
+    z-index: 0;
+  }
+  @keyframes breathe {
+    0%, 100% { opacity: 0.3; transform: translate(-50%, -50%) scale(1); }
+    50% { opacity: 0.6; transform: translate(-50%, -50%) scale(1.1); }
+  }
+  header {
+    position: relative;
+    z-index: 10;
+    padding: 18px 28px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(5,5,8,0.8);
+    backdrop-filter: blur(12px);
+  }
+  .logo-mark {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 18px; color: #fff;
+    box-shadow: 0 0 20px var(--accent-glow);
+    animation: pulse-mark 3s ease-in-out infinite;
+  }
+  @keyframes pulse-mark {
+    0%, 100% { box-shadow: 0 0 20px var(--accent-glow); }
+    50% { box-shadow: 0 0 40px var(--accent-glow), 0 0 60px rgba(6,182,212,0.15); }
+  }
+  .brand { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
+  .brand span { color: var(--muted); font-weight: 400; font-size: 14px; margin-left: 8px; }
+  .main { flex: 1; display: flex; flex-direction: column; position: relative; z-index: 5; overflow: hidden; }
+  .chat-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    max-width: 900px;
+    width: 100%;
+    margin: 0 auto;
+    scroll-behavior: smooth;
+  }
+  .msg {
+    display: flex;
+    gap: 14px;
+    animation: msgIn 0.35s ease-out;
+    max-width: 100%;
+  }
+  @keyframes msgIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .msg-avatar {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700;
+  }
+  .msg-avatar.pulse-avatar {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: #fff;
+  }
+  .msg-avatar.user-avatar {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+  .msg-body {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px 20px;
+    line-height: 1.7;
+    font-size: 15px;
+    color: var(--text);
+    max-width: calc(100% - 60px);
+    word-wrap: break-word;
+  }
+  .msg-body p { margin-bottom: 10px; }
+  .msg-body p:last-child { margin-bottom: 0; }
+  .msg-body code {
+    background: rgba(168,85,247,0.12);
+    color: #d8b4fe;
+    padding: 2px 6px;
+    border-radius: 5px;
+    font-family: 'Fira Code', monospace;
+    font-size: 13px;
+  }
+  .code-block {
+    background: #030308;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin: 12px 0;
+    overflow: hidden;
+  }
+  .code-header {
+    background: var(--surface-2);
+    padding: 8px 14px;
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .code-header button {
+    background: none; border: none; color: var(--muted);
+    cursor: pointer; font-size: 12px; font-weight: 500;
+  }
+  .code-header button:hover { color: var(--text); }
+  pre {
+    padding: 14px 16px;
+    overflow-x: auto;
+    font-family: 'Fira Code', 'Consolas', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #a5b4fc;
+    margin: 0;
+  }
+  .input-bar {
+    padding: 20px 24px 28px;
+    max-width: 900px;
+    width: 100%;
+    margin: 0 auto;
+    position: relative;
+    z-index: 10;
+  }
+  .input-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 6px;
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .input-wrap:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(168,85,247,0.1);
+  }
+  .input-wrap textarea {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--text);
+    font-size: 15px;
+    padding: 12px 14px;
+    resize: none;
+    outline: none;
+    font-family: inherit;
+    max-height: 140px;
+    min-height: 24px;
+    line-height: 1.5;
+  }
+  .input-wrap textarea::placeholder { color: var(--muted); }
+  .send-btn {
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.2s, box-shadow 0.2s;
+    flex-shrink: 0;
+    margin-bottom: 2px;
+  }
+  .send-btn:hover { transform: scale(1.05); box-shadow: 0 4px 20px var(--accent-glow); }
+  .send-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+  .typing {
+    display: flex; gap: 4px; padding: 16px 20px;
+  }
+  .typing span {
+    width: 8px; height: 8px; background: var(--accent);
+    border-radius: 50%;
+    animation: typingBounce 1.4s infinite ease-in-out;
+  }
+  .typing span:nth-child(2) { animation-delay: 0.2s; }
+  .typing span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes typingBounce {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-6px); }
+  }
+  .step-card {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    margin: 10px 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    transition: all 0.2s;
+  }
+  .step-card:hover { border-color: var(--accent); }
+  .step-num {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    font-size: 12px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .step-content { flex: 1; }
+  .step-title { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+  .step-desc { font-size: 13px; color: var(--muted); line-height: 1.5; }
+  .step-desc code {
+    background: rgba(168,85,247,0.12); color: #d8b4fe;
+    padding: 1px 5px; border-radius: 4px; font-family: monospace; font-size: 12px;
+  }
+  .btn-inline {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: #fff; border: none; padding: 6px 14px;
+    border-radius: 8px; font-size: 13px; font-weight: 600;
+    cursor: pointer; margin-top: 8px;
+  }
+  .btn-inline:hover { filter: brightness(1.1); }
+  .env-box {
+    background: #030308;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-family: 'Fira Code', monospace;
+    font-size: 13px;
+    color: #a5b4fc;
+    margin: 10px 0;
+    position: relative;
+  }
+  .copy-btn {
+    position: absolute; top: 8px; right: 8px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    color: var(--muted); padding: 4px 10px;
+    border-radius: 6px; font-size: 11px; cursor: pointer;
+  }
+  .copy-btn:hover { color: var(--text); border-color: var(--accent); }
+  .toast {
+    position: fixed; bottom: 100px; left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--success); color: #fff;
+    padding: 10px 20px; border-radius: 10px;
+    font-weight: 600; font-size: 14px;
+    opacity: 0; pointer-events: none;
+    transition: all 0.3s; z-index: 200;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .hero-welcome {
+    text-align: center;
+    padding: 40px 20px 20px;
+    animation: fadeUp 0.6s ease-out;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .hero-welcome h1 {
+    font-size: 42px; font-weight: 800;
+    background: linear-gradient(90deg, #fff, #c4b5fd);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    margin-bottom: 12px;
+  }
+  .hero-welcome p { color: var(--muted); font-size: 16px; max-width: 500px; margin: 0 auto 30px; line-height: 1.6; }
+  .suggestion-chips {
+    display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
+    max-width: 700px; margin: 0 auto;
+  }
+  .chip {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 10px 18px;
+    border-radius: 100px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .chip:hover {
+    border-color: var(--accent);
+    color: var(--text);
+    transform: translateY(-1px);
+  }
+  .divider-line {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+    margin: 16px 0;
+  }
+  .status-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(34,197,94,0.12);
+    color: var(--success);
+    font-size: 12px; font-weight: 600;
+    padding: 4px 12px; border-radius: 20px;
+    margin-bottom: 10px;
+  }
+  .status-badge::before {
+    content: ''; width: 6px; height: 6px;
+    background: var(--success); border-radius: 50%;
+    animation: livePulse 2s infinite;
+  }
+  @keyframes livePulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-mark">P</div>
+  <div class="brand">Pulse <span>Discord Bot Generation</span></div>
+</header>
+
+<div class="main">
+  <div class="chat-area" id="chat">
+    <div class="hero-welcome" id="welcome">
+      <h1>What should your bot do?</h1>
+      <p>Describe it in plain English. Pulse will generate the code, walk you through Discord setup, and give you everything to go live.</p>
+      <div class="suggestion-chips">
+        <div class="chip" onclick="sendChip(this)">"A welcome bot with dad jokes and auto-roles"</div>
+        <div class="chip" onclick="sendChip(this)">"Music bot with Spotify and queue system"</div>
+        <div class="chip" onclick="sendChip(this)">"Moderation bot with AI toxicity detection"</div>
+        <div class="chip" onclick="sendChip(this)">"Ticket system with sentiment analysis"</div>
+        <div class="chip" onclick="sendChip(this)">"Economy bot with daily rewards and shop"</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="input-bar">
+    <div class="input-wrap">
+      <textarea id="user-input" rows="1" placeholder="Tell Pulse what you want..." onkeydown="handleKey(event)"></textarea>
+      <button class="send-btn" id="send-btn" onclick="sendMessage()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">Copied!</div>
+
+<script>
+const chat = document.getElementById('chat');
+const input = document.getElementById('user-input');
+const sendBtn = document.getElementById('send-btn');
+let isTyping = false;
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+  input.style.height = 'auto';
+  input.style.height = Math.min(input.scrollHeight, 140) + 'px';
+}
+
+function sendChip(el) {
+  input.value = el.textContent.replace(/"/g, '');
+  sendMessage();
+}
+
+function sendMessage() {
+  const text = input.value.trim();
+  if (!text || isTyping) return;
+  
+  addUserMsg(text);
+  input.value = '';
+  input.style.height = 'auto';
+  document.getElementById('welcome').style.display = 'none';
+  
+  isTyping = true;
+  sendBtn.disabled = true;
+  showTyping();
+  
+  setTimeout(() => processRequest(text), 800 + Math.random() * 600);
+}
+
+function addUserMsg(text) {
+  const div = document.createElement('div');
+  div.className = 'msg';
+  div.innerHTML = `
+    <div class="msg-avatar user-avatar">You</div>
+    <div class="msg-body">${escapeHtml(text)}</div>
+  `;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function addPulseMsg(html) {
+  const div = document.createElement('div');
+  div.className = 'msg';
+  div.innerHTML = `
+    <div class="msg-avatar pulse-avatar">P</div>
+    <div class="msg-body">${html}</div>
+  `;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function showTyping() {
+  const div = document.createElement('div');
+  div.className = 'msg';
+  div.id = 'typing-msg';
+  div.innerHTML = `
+    <div class="msg-avatar pulse-avatar">P</div>
+    <div class="msg-body"><div class="typing"><span></span><span></span><span></span></div></div>
+  `;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function removeTyping() {
+  const t = document.getElementById('typing-msg');
+  if (t) t.remove();
+}
+
+function escapeHtml(t) {
+  return t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+function codeBlock(title, code) {
+  return `
+    <div class="code-block">
+      <div class="code-header">
+        <span>${title}</span>
+        <button onclick="copyCode(this)">Copy</button>
+      </div>
+      <pre>${escapeHtml(code)}</pre>
+    </div>
+  `;
+}
+
+function copyCode(btn) {
+  const code = btn.closest('.code-block').querySelector('pre').textContent;
+  navigator.clipboard.writeText(code).then(() => showToast('Copied!'));
+}
+
+function copyEnv(btn) {
+  const text = btn.previousElementSibling.textContent;
+  navigator.clipboard.writeText(text).then(() => showToast('Copied!'));
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// ======================
+// PULSE AI LOGIC
+// ======================
+
+function processRequest(text) {
+  removeTyping();
+  const lower = text.toLowerCase();
+  
+  // Detect intent
+  if (lower.includes('welcome') || lower.includes('joke') || lower.includes('role') || lower.includes('join')) {
+    buildWelcomeBot();
+  } else if (lower.includes('music') || lower.includes('spotify') || lower.includes('queue') || lower.includes('song')) {
+    buildMusicBot();
+  } else if (lower.includes('mod') || lower.includes('ban') || lower.includes('toxic') || lower.includes('kick')) {
+    buildModBot();
+  } else if (lower.includes('ticket') || lower.includes('support') || lower.includes('help desk')) {
+    buildTicketBot();
+  } else if (lower.includes('economy') || lower.includes('coin') || lower.includes('money') || lower.includes('shop') || lower.includes('daily')) {
+    buildEconomyBot();
+  } else if (lower.includes('application') || lower.includes('app id') || lower.includes('token') || lower.includes('how to') || lower.includes('setup discord')) {
+    explainDiscordSetup();
+  } else {
+    buildGenericBot(text);
+  }
+  
+  isTyping = false;
+  sendBtn.disabled = false;
+}
+
+function buildWelcomeBot() {
+  const code = `const { Client, GatewayIntentBits, EmbedBuilder } = require('discord.js');
+const client = new Client({
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildMessageReactions
+  ]
+});
+
+const dadJokes = [
+  "I'm afraid for the calendar. Its days are numbered.",
+  "Why do fathers take an extra pair of socks when they go golfing? In case they get a hole in one!",
+  "Singing in the shower is fun until you get soap in your mouth. Then it's a soap opera.",
+  "Dear Math, grow up and solve your own problems.",
+  "What do a tick and the Eiffel Tower have in common? They're both Paris sites."
+];
+
+client.on('guildMemberAdd', async (member) => {
+  const channel = member.guild.channels.cache.find(
+    c => c.name === 'general' || c.name === 'welcome'
+  );
+  if (!channel) return;
+  
+  const joke = dadJokes[Math.floor(Math.random() * dadJokes.length)];
+  const embed = new EmbedBuilder()
+    .setColor(0xA855F7)
+    .setTitle(\`Welcome to the server, \${member.user.username}! 🎉\`)
+    .setDescription(\`Here's a dad joke to get you started:\\\n\\\n> \${joke}\`)
+    .setThumbnail(member.user.displayAvatarURL({ dynamic: true }))
+    .setFooter({ text: 'React with 🎮 to get the Gamer role!' });
+  
+  const msg = await channel.send({ embeds: [embed] });
+  await msg.react('🎮');
+  await msg.react('🎵');
+  await msg.react('💻');
+  
+  // Auto-assign Member role
+  const memberRole = member.guild.roles.cache.find(r => r.name === 'Member');
+  if (memberRole) await member.roles.add(memberRole);
+});
+
+client.on('messageReactionAdd', async (reaction, user) => {
+  if (user.bot) return;
+  const member = await reaction.message.guild.members.fetch(user.id);
+  const roleMap = { '🎮': 'Gamer', '🎵': 'Music', '💻': 'Developer' };
+  const roleName = roleMap[reaction.emoji.name];
+  if (!roleName) return;
+  const role = reaction.message.guild.roles.cache.find(r => r.name === roleName);
+  if (role) await member.roles.add(role).catch(() => {});
+});
+
+client.on('messageReactionRemove', async (reaction, user) => {
+  if (user.bot) return;
+  const member = await reaction.message.guild.members.fetch(user.id);
+  const roleMap = { '🎮': 'Gamer', '🎵': 'Music', '💻': 'Developer' };
+  const roleName = roleMap[reaction.emoji.name];
+  if (!roleName) return;
+  const role = reaction.message.guild.roles.cache.find(r => r.name === roleName);
+  if (role) await member.roles.remove(role).catch(() => {});
+});
+
+client.on('guildMemberRemove', async (member) => {
+  const channel = member.guild.channels.cache.find(
+    c => c.name === 'general' || c.name === 'logs'
+  );
+  if (channel) channel.send(\`👋 \${member.user.tag} has left the server.\`);
+});
+
+client.once('ready', () => {
+  console.log(\`✅ Pulse Welcome Bot online as \${client.user.tag}\`);
+});
+
+client.login(process.env.DISCORD_TOKEN);`;
+
+  const env = `DISCORD_TOKEN=your-bot-token-here`;
+
+  addPulseMsg(`
+    <div class="status-badge">Bot Generated</div>
+    <p>I've built you a <strong>Welcome Bot</strong> with dad jokes, auto-roles via reactions, and join/leave logging. Here's everything you need:</p>
+    
+    <div class="divider-line"></div>
+    
+    <div class="step-card">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <div class="step-title">Create your Discord Application</div>
+        <div class="step-desc">Go to <a href="https://discord.com/developers/applications" target="_blank" style="color:var(--accent); text-decoration:none; font-weight:600;">discord.com/developers</a> → New Application → name it "Pulse Welcome Bot" → copy the <strong>Application ID</strong>.</div>
+      </div>
+    </div>
+    
+    <div class="step-card">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <div class="step-title">Get your Bot Token</div>
+        <div class="step-desc">In the left sidebar click <strong>Bot</strong> → <strong>Reset Token</strong> → copy it. Then scroll down and enable ALL three Privileged Gateway Intents (Presence, Server Members, Message Content).</div>
+      </div>
+    </div>
+    
+    <div class="step-card">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <div class="step-title">Your .env file</div>
+        <div class="env-box">${env}<button class="copy-btn" onclick="copyEnv(this)">Copy</button></div>
+        <div class="step-desc">Replace <code>your-bot-token-here</code> with the token from Step 2.</div>
+      </div>
+    </div>
+    
+    <div class="step-card">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <div class="step-title">Generated Code</div>
+        <div class="step-desc">Save this as <code>bot.js</code> in your project folder.</div>
+      </div>
+    </div>
+    
+    ${codeBlock('bot.js', code)}
+    
+    <div class="step-card">
+      <div class="step-num">5</div>
+      <div class="step-content">
+        <div class="step-title">Invite to your server</div>
+        <div class="step-desc">Use this URL (replace <code>YOUR_APP_ID</code> with your Application ID from Step 1):</div>
+        <div class="env-box">https://discord.com/api/oauth2/authorize?client_id=<strong>YOUR_APP_ID</strong>&permissions=268443648&scope=bot%20applications.commands<button class="copy-btn" onclick="copyEnv(this)">Copy</button></div>
+      </div>
+    </div>
+    
+    <div class="step-card">
+      <div class="step-num">6</div>
+      <div class="step-content">
+        <div class="step-title">Host it 24/7</div>
+        <div class="step-desc">Upload <code>bot.js</code> and <code>.env</code> to <strong>Railway</strong> or <strong>Replit</strong> to keep your bot online forever. Need help with hosting?</div>
+      </div>
+    </div>
+    
+    <p style="margin-top:12px; font-size:14px; color:var(--muted);">Want me to change anything? Just ask — e.g. "add a custom welcome image" or "make it DM new members."</p>
+  `);
+}
+
+function buildMusicBot() {
+  const code = `const { Client, GatewayIntentBits, EmbedBuilder } = require('discord.js');
+const { DisTube } = require('distube');
+const { SpotifyPlugin } = require('@distube/spotify');
+const client = new Client({
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildVoiceStates
+  ]
+});
+
+const distube = new DisTube(client, {
+  plugins: [new SpotifyPlugin()],
+  leaveOnStop: false,
+  leaveOnFinish: true,
+  leaveOnEmpty: true,
+  emptyCooldown: 30
+});
+
+const queues = new Map();
+
+client.on('messageCreate', async (message) => {
+  if (message.author.bot || !message.content.startsWith('!')) return;
+  const args = message.content.slice(1).trim().split(/ +/);
+  const cmd = args.shift().toLowerCase();
+  const voiceChannel = message.member.voice.channel;
+  
+  if (cmd === 'play' || cmd === 'p') {
+    if (!voiceChannel) return message.reply('Join a voice channel first!');
+    const query = args.join(' ');
+    if (!query) return message.reply('What should I play? `!play <song>`');
+    distube.play(voiceChannel, query, { member: message.member, textChannel: message.channel });
+  }
+  
+  if (cmd === 'skip') {
+    const queue = distube.getQueue(message.guildId);
+    if (!queue) return message.reply('Nothing is playing.');
+    queue.skip();
+    message.react('⏭️');
+  }
+  
+  if (cmd === 'queue' || cmd === 'q') {
+    const queue = distube.getQueue(message.guildId);
+    if (!queue) return message.reply('The queue is empty.');
+    const embed = new EmbedBuilder()
+      .setColor(0x06B6D4)
+      .setTitle('🎵 Queue')
+      .setDescription(queue.songs.map((s, i) => \`\${i + 1}. [\${s.name}](\${s.url}) — \${s.formattedDuration}\`).slice(0, 10).join('\\n'));
+    message.channel.send({ embeds: [embed] });
+  }
+  
+  if (cmd === 'stop') {
+    const queue = distube.getQueue(message.guildId);
+    if (queue) queue.stop();
+    message.react('⏹️');
+  }
+});
+
+client.once('ready', () => console.log(\`🎵 Pulse Music Bot online as \${client.user.tag}\`));
+client.login(process.env.DISCORD_TOKEN);`;
+
+  addPulseMsg(`
+    <div class="status-badge">Bot Generated</div>
+    <p>I've built you a <strong>Music Bot</strong> with Spotify support, queue management, and voice channel controls. Here's your package:</p>
+    <div class="divider-line"></div>
+    ${codeBlock('bot.js', code)}
+    <p style="margin-top:10px; font-size:14px; color:var(--muted);">You'll also need to run <code>npm install discord.js distube @distube/spotify</code>. Commands: <code>!play</code>, <code>!skip</code>, <code>!queue</code>, <code>!stop</code>.</p>
+    <p style="margin-top:8px; font-size:14px; color:var(--muted);">Need the Discord setup steps? Just say <strong>"how do I create the app?"</strong></p>
+  `);
+}
+
+function buildModBot() {
+  const code = `const { Client, GatewayIntentBits, EmbedBuilder, PermissionsBitField } = require('discord.js');
+const client = new Client({
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildMembers
+  ]
+});
+
+const toxicWords = ['badword1', 'badword2'];
+const warnMap = new Map();
+
+client.on('messageCreate', async (message) => {
+  if (message.author.bot) return;
+  
+  // Auto-moderation
+  const content = message.content.toLowerCase();
+  if (toxicWords.some(w => content.includes(w))) {
+    await message.delete();
+    const warn = (warnMap.get(message.author.id) || 0) + 1;
+    warnMap.set(message.author.id, warn);
+    
+    if (warn >= 3) {
+      await message.member.timeout(3600000, 'Auto-moderation: 3 warnings');
+      message.channel.send(\`⏱️ \${message.author} has been timed out for 1 hour.\`);
+      warnMap.delete(message.author.id);
+    } else {
+      message.channel.send(\`⚠️ \${message.author}, warning \${warn}/3. Watch your language.\`);
+    }
+    return;
+  }
+  
+  // Commands
+  if (!message.content.startsWith('!')) return;
+  const args = message.content.slice(1).trim().split(/ +/);
+  const cmd = args.shift().toLowerCase();
+  
+  if (cmd === 'ban') {
+    if (!message.member.permissions.has(PermissionsBitField.Flags.BanMembers))
+      return message.reply('You need Ban Members permission.');
+    const target = message.mentions.members.first();
+    if (!target) return message.reply('Mention a user to ban.');
+    await target.ban({ reason: args.slice(1).join(' ') || 'No reason' });
+    message.channel.send(\`🔨 Banned \${target.user.tag}\`);
+  }
+  
+  if (cmd === 'kick') {
+    if (!message.member.permissions.has(PermissionsBitField.Flags.KickMembers))
+      return message.reply('You need Kick Members permission.');
+    const target = message.mentions.members.first();
+    if (!target) return message.reply('Mention a user to kick.');
+    await target.kick(args.slice(1).join(' ') || 'No reason');
+    message.channel.send(\`👢 Kicked \${target.user.tag}\`);
+  }
+  
+  if (cmd === 'clear') {
+    if (!message.member.permissions.has(PermissionsBitField.Flags.ManageMessages))
+      return message.reply('You need Manage Messages permission.');
+    const amount = parseInt(args[0]) || 10;
+    await message.channel.bulkDelete(Math.min(amount + 1, 100));
+  }
+});
+
+client.once('ready', () => console.log(\`🛡️ Pulse Mod Bot online as \${client.user.tag}\`));
+client.login(process.env.DISCORD_TOKEN);`;
+
+  addPulseMsg(`
+    <div class="status-badge">Bot Generated</div>
+    <p>I've built you a <strong>Moderation Bot</strong> with auto-toxicity filtering, ban/kick/clear commands, and a 3-strike warning system. Here's your code:</p>
+    <div class="divider-line"></div>
+    ${codeBlock('bot.js', code)}
+    <p style="margin-top:10px; font-size:14px; color:var(--muted);">Edit the <code>toxicWords</code> array to customize your filter. Commands: <code>!ban @user</code>, <code>!kick @user</code>, <code>!clear 50</code>.</p>
+  `);
+}
+
+function buildTicketBot() {
+  const code = `const { Client, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, PermissionsBitField } = require('discord.js');
+const client = new Client({
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent]
+});
+
+client.on('messageCreate', async (message) => {
+  if (message.author.bot || !message.content.startsWith('!')) return;
+  const args = message.content.slice(1).trim().split(/ +/);
+  const cmd = args.shift().toLowerCase();
+  
+  if (cmd === 'ticket') {
+    const row = new ActionRowBuilder().addComponents(
+      new ButtonBuilder().setCustomId('open_ticket').setLabel('🎫 Open Ticket').setStyle(ButtonStyle.Primary)
+    );
+    const embed = new EmbedBuilder()
+      .setColor(0xA855F7)
+      .setTitle('Support Tickets')
+      .setDescription('Click the button below to open a private support ticket.');
+    await message.channel.send({ embeds: [embed], components: [row] });
+  }
+});
+
+client.on('interactionCreate', async (interaction) => {
+  if (!interaction.isButton() || interaction.customId !== 'open_ticket') return;
+  
+  const ticketChannel = await interaction.guild.channels.create({
+    name: \`ticket-\${interaction.user.username}\`,
+    type: ChannelType.GuildText,
+    permissionOverwrites: [
+      { id: interaction.guild.id, deny: [PermissionsBitField.Flags.ViewChannel] },
+      { id: interaction.user.id, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] },
+      { id: client.user.id, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] }
+    ]
+  });
+  
+  const closeRow = new ActionRowBuilder().addComponents(
+    new ButtonBuilder().setCustomId('close_ticket').setLabel('🔒 Close').setStyle(ButtonStyle.Danger)
+  );
+  
+  await ticketChannel.send({
+    content: \`Hey <@\${interaction.user.id}>, support is here! Describe your issue.\`,
+    components: [closeRow]
+  });
+  
+  await interaction.reply({ content: \`Ticket created: \${ticketChannel}\`, ephemeral: true });
+});
+
+client.on('interactionCreate', async (interaction) => {
+  if (!interaction.isButton() || interaction.customId !== 'close_ticket') return;
+  await interaction.channel.delete();
+});
+
+client.once('ready', () => console.log(\`🎫 Pulse Ticket Bot online as \${client.user.tag}\`));
+client.login(process.env.DISCORD_TOKEN);`;
+
+  addPulseMsg(`
+    <div class="status-badge">Bot Generated</div>
+    <p>I've built you a <strong>Ticket System Bot</strong> with a button-based UI, private channel creation, and one-click close. Here's your code:</p>
+    <div class="divider-line"></div>
+    ${codeBlock('bot.js', code)}
+    <p style="margin-top:10px; font-size:14px; color:var(--muted);">Run <code>!ticket</code> in any channel to spawn the ticket panel. Users click the button to open private support channels.</p>
+  `);
+}
+
+function buildEconomyBot() {
+  const code = `const { Client, GatewayIntentBits, EmbedBuilder } = require('discord.js');
+const fs = require('fs');
+const client = new Client({
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent]
+});
+
+const DB_PATH = './economy.json';
+const getBal = (id) => { try { return JSON.parse(fs.readFileSync(DB_PATH))[id] || 0; } catch { return 0; } };
+const setBal = (id, amt) => { let d = {}; try { d = JSON.parse(fs.readFileSync(DB_PATH)); } catch {} d[id] = amt; fs.writeFileSync(DB_PATH, JSON.stringify(d)); };
+const dailyCooldown = new Map();
+
+client.on('messageCreate', async (msg) => {
+  if (msg.author.bot || !msg.content.startsWith('!')) return;
+  const args = msg.content.slice(1).trim().split(/ +/);
+  const cmd = args.shift().toLowerCase();
+  const uid = msg.author.id;
+  
+  if (cmd === 'daily') {
+    const last = dailyCooldown.get(uid);
+    if (last && Date.now() - last < 86400000) {
+      const hrs = Math.ceil((86400000 - (Date.now() - last)) / 3600000);
+      return msg.reply(\`Come back in \${hrs}h for your next daily reward.\`);
+    }
+    const reward = 100 + Math.floor(Math.random() * 50);
+    setBal(uid, getBal(uid) + reward);
+    dailyCooldown.set(uid, Date.now());
+    msg.reply(\`💰 You claimed your daily **\${reward}** coins! Balance: **\${getBal(uid)}**\`);
+  }
+  
+  if (cmd === 'balance' || cmd === 'bal') {
+    msg.reply(\`💳 Your balance: **\${getBal(uid)}** coins\`);
+  }
+  
+  if (cmd === 'pay') {
+    const target = msg.mentions.users.first();
+    const amount = parseInt(args[1]);
+    if (!target || isNaN(amount) || amount < 1) return msg.reply('Usage: !pay @user 50');
+    if (getBal(uid) < amount) return msg.reply('Not enough coins!');
+    setBal(uid, getBal(uid) - amount);
+    setBal(target.id, getBal(target.id) + amount);
+    msg.reply(\`💸 Sent **\${amount}** coins to \${target.username}!\`);
+  }
+  
+  if (cmd === 'shop') {
+    const embed = new EmbedBuilder()
+      .setColor(0x22C55E)
+      .setTitle('🏪 Item Shop')
+      .addFields(
+        { name: 'VIP Role', value: '500 coins', inline: true },
+        { name: 'Custom Color', value: '200 coins', inline: true },
+        { name: 'Badge', value: '1000 coins', inline: true }
+      );
+    msg.channel.send({ embeds: [embed] });
+  }
+});
+
+client.once('ready', () => console.log(\`💰 Pulse Economy Bot online as \${client.user.tag}\`));
+client.login(process.env.DISCORD_TOKEN);`;
+
+  addPulseMsg(`
+    <div class="status-badge">Bot Generated</div>
+    <p>I've built you an <strong>Economy Bot</strong> with daily rewards, balance tracking, payments, and a shop system. Data saves to a local JSON file.</p>
+    <div class="divider-line"></div>
+    ${codeBlock('bot.js', code)}
+    <p style="margin-top:10px; font-size:14px; color:var(--muted);">Commands: <code>!daily</code>, <code>!balance</code>, <code>!pay @user 50</code>, <code>!shop</code>. For production, swap the JSON file for a real database.</p>
+  `);
+}
+
+function explainDiscordSetup() {
+  addPulseMsg(`
+    <p>Here's exactly how to create your Discord Application and get your Bot Token:</p>
+    
+    <div class="step-card">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <div class="step-title">Go to the Developer Portal</div>
+        <div class="step-desc">Open <a href="https://discord.com/developers/applications" target="_blank" style="color:var(--accent); text-decoration:none; font-weight:600;">discord.com/developers/applications</a> and sign in.</div>
+      </div>
+    </div>
+    
+    <div class="step-card">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <div class="step-title">Create a New Application</div>
+        <div class="step-desc">Click the <strong>New Application</strong> button in the top right. Name it anything (e.g., "Pulse Bot"). Click <strong>Create</strong>.</div>
+      </div>
+    </div>
+    
+    <div class="step-card">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <div class="step-title">Copy your Application ID</div>
+        <div class="step-desc">On the General Information page, find <strong>Application ID</strong> near the top. Click <strong>Copy</strong>. You'll need this for the invite link.</div>
+      </div>
+    </div>
+    
+    <div class="step-card">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <div class="step-title">Add a Bot User</div>
+        <div class="step-desc">In the left sidebar, click <strong>Bot</strong>. Then click <strong>Reset Token</strong> and copy the token. <strong>Never share this token.</strong></div>
+      </div>
+    </div>
+    
+    <div class="step-card">
+      <div class="step-num">5</div>
+      <div class="step-content">
+        <div class="step-title">Enable Privileged Intents</div>
+        <div class="step-desc">On the same Bot page, scroll to <strong>Privileged Gateway Intents</strong> and turn ON all three switches:</div>
+        <div style="margin-top:6px; font-size:13px; color:var(--accent);">✓ PRESENCE INTENT &nbsp; ✓ SERVER MEMBERS INTENT &nbsp; ✓ MESSAGE CONTENT INTENT</div>
+      </div>
+    </div>
+    
+    <div class="step-card">
+      <div class="step-num">6</div>
+      <div class="step-content">
+        <div class="step-title">Invite your Bot</div>
+        <div class="step-desc">Use this URL (replace <code>YOUR_APP_ID</code> with the ID from Step 3):</div>
+        <div class="env-box">https://discord.com/api/oauth2/authorize?client_id=<strong>YOUR_APP_ID</strong>&permissions=8&scope=bot%20applications.commands<button class="copy-btn" onclick="copyEnv(this)">Copy</button></div>
+      </div>
+    </div>
+    
+    <p style="margin-top:12px; font-size:14px; color:var(--muted);">Once you've done this, tell me what kind of bot you want and I'll generate the code using your token.</p>
+  `);
+}
+
+function buildGenericBot(text) {
+  const code = `const { Client, GatewayIntentBits, EmbedBuilder } = require('discord.js');
+const client = new Client({
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent
+  ]
+});
+
+client.on('messageCreate', async (message) => {
+  if (message.author.bot || !message.content.startsWith('!')) return;
+  const args = message.content.slice(1).trim().split(/ +/);
+  const cmd = args.shift().toLowerCase();
+  
+  if (cmd === 'ping') {
+    message.reply(\`🏓 Pong! Latency: \${Date.now() - message.createdTimestamp}ms\`);
+  }
+  
+  if (cmd === 'help') {
+    const embed = new EmbedBuilder()
+      .setColor(0xA855F7)
+      .setTitle('Pulse Bot Commands')
+      .setDescription('Custom bot generated by Pulse.')
+      .addFields(
+        { name: '!ping', value: 'Check bot latency' },
+        { name: '!help', value: 'Show this message' }
+      );
+    message.channel.send({ embeds: [embed] });
+  }
+});
+
+client.once('ready', () => console.log(\`✅ Pulse Bot online as \${client.user.tag}\`));
+client.login(process.env.DISCORD_TOKEN);`;
+
+  addPulseMsg(`
+    <div class="status-badge">Bot Generated</div>
+    <p>I didn't recognize a specific template for "<strong>${escapeHtml(text)}</strong>", so I've generated a <strong>starter bot</strong> you can customize. It has a ping command and a help embed.</p>
+    <div class="divider-line"></div>
+    ${codeBlock('bot.js', code)}
+    <p style="margin-top:10px; font-size:14px; color:var(--muted);">Want something more specific? Try saying: <em>"make it a moderation bot"</em> or <em>"add music commands"</em> and I'll rebuild it.</p>
+  `);
+}
+</script>
+
+</body>
+</html>'''
+
+with open('/mnt/agents/output/pulse_bot_generator.html', 'w') as f:
+    f.write(html_code)
+
+print(f"Saved {len(html_code)} characters to /mnt/agents/output/pulse_bot_generator.html")
